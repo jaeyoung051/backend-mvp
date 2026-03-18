@@ -1,5 +1,7 @@
 package com.seo051.backend.domain.post;
 
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,11 +16,26 @@ public class PostController {
     public PostController(PostService postService) {
         this.postService = postService;
     }
-
+챙ㄷ 
     @PostMapping
-    public Map<String, Long> create(@RequestBody PostCreateRequest req) {
+    public Map<String, Long> create(@Valid @RequestBody PostCreateRequest req) {
         Long id = postService.create(req);
         return Map.of("id", id);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> update(
+            @PathVariable Long id,
+            @Valid @RequestBody PostUpdateRequest req
+    ) {
+        postService.update(id, req);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        postService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

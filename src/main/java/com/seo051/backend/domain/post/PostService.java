@@ -24,18 +24,41 @@ public class PostService {
         return post.getId();
     }
 
+    public void update(Long id, PostUpdateRequest req) { // 변경 감지(Dirty Checking) 있어서 영속상태로 들어옴 save 필요없음
+        Post post = postRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("post not found"));
+
+        post.update(req.title(), req.content());
+    }
+
+    public void delete(Long id) {
+        Post post = postRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("post not found"));
+        post.softDelete();
+    }
+
     @Transactional(readOnly = true)
     public List<PostResponse> list() { // 글 목록
-        return postRepository.findAll().stream()
-                .map(p -> new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getUser().getId()))
+        return postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+                .map(p -> new PostResponse(
+                        p.getId(),
+                        p.getTitle(),
+                        p.getContent(),
+                        p.getUser().getId()
+                ))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public PostResponse get(Long id) { // 글 정보 가져오기
-        Post p = postRepository.findById(id)
+        Post p = postRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new IllegalArgumentException("post not found"));
-        return new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getUser().getId());
+        return new PostResponse(
+                p.getId(),
+                p.getTitle(),
+                p.getContent(),
+                p.getUser().getId()
+        );
     }
 
     public PostService(UserRepository userRepository, PostRepository postRepository) {
