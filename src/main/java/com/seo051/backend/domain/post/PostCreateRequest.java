@@ -11,8 +11,5 @@ public record PostCreateRequest (
         String title,
 
         @NotBlank
-        String content,
-
-        @NotNull
-        Long userId
+        String content
 ) {}

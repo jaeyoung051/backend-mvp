@@ -14,8 +14,8 @@ public class PostService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
 
-    public Long create(PostCreateRequest req) { // 유저 존재 확인
-        User user = userRepository.findById(req.userId())
+    public Long create(PostCreateRequest req, Long userId) { // 유저 존재 확인
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("user not found"));
 
         Post post = new Post(req.title(), req.content(), user);
@@ -24,16 +24,25 @@ public class PostService {
         return post.getId();
     }
 
-    public void update(Long id, PostUpdateRequest req) { // 변경 감지(Dirty Checking) 있어서 영속상태로 들어옴 save 필요없음
+    public void update(Long id, PostUpdateRequest req, Long userId) { // 변경 감지(Dirty Checking) 있어서 영속상태로 들어옴 save 필요없음
         Post post = postRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new IllegalArgumentException("post not found"));
+
+        if(!post.getUser().getId().equals(userId)) {
+            throw new IllegalStateException("forbidden");
+        }
 
         post.update(req.title(), req.content());
     }
 
-    public void delete(Long id) {
+    public void delete(Long id, Long userId) {
         Post post = postRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new IllegalArgumentException("post not found"));
+
+        if(!post.getUser().getId().equals(userId)){
+            throw new IllegalStateException("forbidden");
+        }
+
         post.softDelete();
     }
 

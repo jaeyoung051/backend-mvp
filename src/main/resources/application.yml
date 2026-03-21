@@ -15,3 +15,7 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
+
+jwt:
+  secret: your-very-secret-key-your-very-secret-key
+  expiration: 3600000
