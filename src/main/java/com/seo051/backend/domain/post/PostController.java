@@ -60,8 +60,13 @@ public class PostController {
     }
 
     @GetMapping
-    public List<PostResponse> list() {
-        return postService.list();
+    public PostPageResponse list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "title_content") String searchType
+    ) {
+        return postService.list(page, size, keyword, searchType);
     }
 
     @GetMapping("/{id}")

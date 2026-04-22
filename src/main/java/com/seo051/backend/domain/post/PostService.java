@@ -2,11 +2,12 @@ package com.seo051.backend.domain.post;
 
 import com.seo051.backend.domain.user.User;
 import com.seo051.backend.domain.user.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-
 
 @Service
 @Transactional
@@ -14,7 +15,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
 
-    public Long create(PostCreateRequest req, Long userId) { // 유저 존재 확인
+    public Long create(PostCreateRequest req, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("user not found"));
 
@@ -24,11 +25,11 @@ public class PostService {
         return post.getId();
     }
 
-    public void update(Long id, PostUpdateRequest req, Long userId) { // 변경 감지(Dirty Checking) 있어서 영속상태로 들어옴 save 필요없음
+    public void update(Long id, PostUpdateRequest req, Long userId) {
         Post post = postRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new IllegalArgumentException("post not found"));
 
-        if(!post.getUser().getId().equals(userId)) {
+        if (!post.getUser().getId().equals(userId)) {
             throw new IllegalStateException("forbidden");
         }
 
@@ -39,7 +40,7 @@ public class PostService {
         Post post = postRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new IllegalArgumentException("post not found"));
 
-        if(!post.getUser().getId().equals(userId)){
+        if (!post.getUser().getId().equals(userId)) {
             throw new IllegalStateException("forbidden");
         }
 
@@ -47,21 +48,53 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponse> list() { // 글 목록
-        return postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc().stream()
-                .map(p -> new PostResponse(
-                        p.getId(),
-                        p.getTitle(),
-                        p.getContent(),
-                        p.getUser().getId()
-                ))
-                .toList();
+    public PostPageResponse list(int page, int size, String keyword, String searchType) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        Page<Post> result;
+
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+
+        if (!hasKeyword) {
+            result = postRepository.findAllByDeletedAtIsNull(pageable);
+        } else if ("title".equalsIgnoreCase(searchType)) {
+            result = postRepository.findByDeletedAtIsNullAndTitleContainingIgnoreCase(keyword, pageable);
+        } else {
+            result = postRepository
+                    .findByDeletedAtIsNullAndTitleContainingIgnoreCaseOrDeletedAtIsNullAndContentContainingIgnoreCase(
+                            keyword,
+                            keyword,
+                            pageable
+                    );
+        }
+
+        return new PostPageResponse(
+                result.getContent().stream()
+                        .map(p -> new PostListItemResponse(
+                                p.getId(),
+                                p.getTitle(),
+                                p.getUser().getId(),
+                                p.getCreatedAt()
+                        ))
+                        .toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isFirst(),
+                result.isLast()
+        );
     }
 
     @Transactional(readOnly = true)
-    public PostResponse get(Long id) { // 글 정보 가져오기
+    public PostResponse get(Long id) {
         Post p = postRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new IllegalArgumentException("post not found"));
+
         return new PostResponse(
                 p.getId(),
                 p.getTitle(),
