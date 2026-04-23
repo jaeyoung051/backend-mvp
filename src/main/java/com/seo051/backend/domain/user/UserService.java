@@ -1,5 +1,6 @@
 package com.seo051.backend.domain.user;
 
+import com.seo051.backend.domain.post.PostRepository;
 import com.seo051.backend.global.exception.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,8 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PostRepository postRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtProvider jwtProvider;
+    //private final JwtProvider jwtProvider;
+    private final com.seo051.backend.global.exception.jwt.JwtProvider jwtProvider;
 
     public UserResponse signup(UserSignupRequest req){
         if(userRepository.findByEmail(req.email()).isPresent()){
@@ -57,4 +60,25 @@ public class UserService {
                 user.getName()
         );
     }
+
+    @Transactional(readOnly = true)
+    public MyInfoResponse me(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("user not found"));
+
+        return new MyInfoResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                postRepository.findAllByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId)
+                        .stream()
+                        .map(post -> new MyPostResponse(
+                                post.getId(),
+                                post.getTitle(),
+                                post.getCreatedAt()
+                        ))
+                        .toList()
+        );
+    }
+
 }
