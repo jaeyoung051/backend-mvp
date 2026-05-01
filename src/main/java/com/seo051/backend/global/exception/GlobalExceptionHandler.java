@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
-@RestControllerAdvice // 모든 컨트롤러에서 발생하는 예외를 가로채는 클래스
+@RestControllerAdvice // 모든 컨트롤러에서 발생하는 예외를 감시하는 클래스
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
