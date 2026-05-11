@@ -3,6 +3,7 @@ import "./Header.css";
 
 export default function Header() {
   const token = localStorage.getItem("accessToken");
+  const userName = localStorage.getItem("userName");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -11,7 +12,15 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userName");
+    localStorage.removeItem("userId");
     navigate("/login");
+  };
+
+  const scrollToSearch = () => {
+    const target = document.querySelector("#search-bar");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   };
 
   if (isAuthPage) {
@@ -22,30 +31,32 @@ export default function Header() {
     <header className="header">
       <div className="header-container">
         <Link to="/posts" className="header-logo">
-          Board
+          <span className="logo-icon">D</span>
+          <span className="logo-text">DevBoard</span>
         </Link>
 
         <nav className="header-nav">
-          <Link to="/posts" className="nav-link">
+          <Link to="/posts" className={`nav-link ${location.pathname === "/posts" ? "active" : ""}`}>
             게시글
           </Link>
-          {token && (
-            <>
-              <Link to="/posts/new" className="nav-link">
-                글 작성
-              </Link>
-              <Link to="/me" className="nav-link">
-                마이페이지
-              </Link>
-            </>
-          )}
+          <a href="#about" className="nav-link">
+            소개
+          </a>
         </nav>
 
         <div className="header-actions">
+          <button type="button" onClick={scrollToSearch} className="search-trigger" aria-label="검색">
+            🔍
+          </button>
           {token ? (
-            <button onClick={handleLogout} className="logout-btn">
-              로그아웃
-            </button>
+            <>
+              <div className="user-info">
+                <span className="user-name">{userName}</span>
+              </div>
+              <button onClick={handleLogout} className="logout-btn">
+                로그아웃
+              </button>
+            </>
           ) : (
             <>
               <Link to="/login" className="login-btn">

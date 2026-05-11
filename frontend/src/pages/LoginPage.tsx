@@ -4,8 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import "./LoginPage.css";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("newuser@test.com");
-  const [password, setPassword] = useState("12345678");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function LoginPage() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Board</h1>
+          <h1>Login</h1>
           <p>로그인하여 게시판을 이용하세요</p>
         </div>
 
@@ -76,7 +76,6 @@ export default function LoginPage() {
         </form>
 
         <div className="login-footer">
-          <span>테스트 계정: newuser@test.com / 12345678</span>
           <div className="login-signup-link">
             <span>아직 계정이 없으신가요? </span>
             <Link to="/signup">회원가입</Link>
